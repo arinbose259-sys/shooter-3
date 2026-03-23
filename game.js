@@ -1,4 +1,42 @@
 // Scene setup
+function playHitSound() {
+  let ctx = new (window.AudioContext || window.webkitAudioContext)();
+  let noise = ctx.createBufferSource();
+  let buffer = ctx.createBuffer(1, 44100, 44100);
+  let data = buffer.getChannelData(0);
+
+  for (let i = 0; i < data.length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  noise.buffer = buffer;
+
+  let gain = ctx.createGain();
+  gain.gain.setValueAtTime(1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+  noise.connect(gain);
+  gain.connect(ctx.destination);
+
+  noise.start();
+}function playShootSound() {
+  let ctx = new (window.AudioContext || window.webkitAudioContext)();
+  let osc = ctx.createOscillator();
+  let gain = ctx.createGain();
+
+  osc.type = "square";
+  osc.frequency.setValueAtTime(200, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
+
+  gain.gain.setValueAtTime(1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.1);
+}
 let scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
