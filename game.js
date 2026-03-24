@@ -47,9 +47,16 @@ document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
 // -- Audio (generated in JS)
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
 
 function playShootSound() {
+  if (!audioCtx) return;
   let osc = audioCtx.createOscillator();
   let gain = audioCtx.createGain();
   osc.type = "square";
@@ -64,6 +71,7 @@ function playShootSound() {
 }
 
 function playHitSound() {
+  if (!audioCtx) return;
   let noise = audioCtx.createBufferSource();
   let buffer = audioCtx.createBuffer(1, 44100, 44100);
   let data = buffer.getChannelData(0);
@@ -84,6 +92,7 @@ let particles = [];
 
 // -- Shooting
 document.addEventListener("click", () => {
+  initAudio();
   playShootSound();
 
   // gun recoil
@@ -98,7 +107,7 @@ document.addEventListener("click", () => {
   bullet.position.copy(camera.position);
   bullet.velocity = new THREE.Vector3();
   camera.getWorldDirection(bullet.velocity);
-  bullet.velocity.multiplyScalar(1);
+  bullet.velocity.multiplyScalar(0.5);
   bullets.push(bullet);
   scene.add(bullet);
 });
@@ -110,7 +119,7 @@ function spawnEnemy() {
     new THREE.BoxGeometry(1, 2, 1),
     new THREE.MeshStandardMaterial({ color: 0xff0000 })
   );
-  e.position.set(Math.random() * 50 - 25, 1, Math.random() * -50);
+  e.position.set(Math.random() * 100 - 25, 1, Math.random() * 100 - 50);
   e.health = 3;
   e.cooldown = 0;
   enemies.push(e);
@@ -185,6 +194,7 @@ function animate() {
   enemyBullets.forEach((b, i) => {
     b.position.add(b.velocity);
     if (b.position.distanceTo(camera.position) < 1) {
+      initAudio();
       playHitSound();
       health -= 5;
       document.getElementById("healthFill").style.width = health + "%";
