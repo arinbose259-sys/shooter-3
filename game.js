@@ -2,24 +2,24 @@
 // 3D FPS Starter Game
 // =========================
 
-// -- Scene setup
+// Scene setup
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 let renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// -- PointerLockControls for FPS
+// PointerLockControls
 let controls = new THREE.PointerLockControls(camera, document.body);
 document.body.addEventListener("click", () => controls.lock());
 scene.add(controls.getObject());
 
-// -- Lighting
+// Lighting
 let light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(10, 20, 10);
 scene.add(light);
 
-// -- Floor
+// Floor
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(200, 200),
   new THREE.MeshStandardMaterial({ color: 0x228B22 })
@@ -27,7 +27,7 @@ let floor = new THREE.Mesh(
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
-// -- Buildings
+// Buildings
 for (let i = 0; i < 20; i++) {
   let b = new THREE.Mesh(
     new THREE.BoxGeometry(5, Math.random() * 10 + 5, 5),
@@ -37,26 +37,18 @@ for (let i = 0; i < 20; i++) {
   scene.add(b);
 }
 
-// -- Player
+// Player
 camera.position.y = 2;
 let health = 100;
 
-// -- Movement
+// Movement
 let keys = {};
 document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-// -- Audio (generated in JS)
-let audioCtx = null;
-
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-}
-
+// Audio
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playShootSound() {
-  if (!audioCtx) return;
   let osc = audioCtx.createOscillator();
   let gain = audioCtx.createGain();
   osc.type = "square";
@@ -71,7 +63,6 @@ function playShootSound() {
 }
 
 function playHitSound() {
-  if (!audioCtx) return;
   let noise = audioCtx.createBufferSource();
   let buffer = audioCtx.createBuffer(1, 44100, 44100);
   let data = buffer.getChannelData(0);
@@ -85,21 +76,17 @@ function playHitSound() {
   noise.start();
 }
 
-// -- Bullets & particles
+// Bullets & particles
 let bullets = [];
 let enemyBullets = [];
 let particles = [];
 
-// -- Shooting
+// Shooting
 document.addEventListener("click", () => {
-  initAudio();
   playShootSound();
-
-  // gun recoil
   camera.rotation.x -= 0.05;
   setTimeout(() => camera.rotation.x += 0.05, 50);
 
-  // create bullet
   let bullet = new THREE.Mesh(
     new THREE.SphereGeometry(0.1),
     new THREE.MeshBasicMaterial({ color: 0xffff00 })
@@ -107,19 +94,19 @@ document.addEventListener("click", () => {
   bullet.position.copy(camera.position);
   bullet.velocity = new THREE.Vector3();
   camera.getWorldDirection(bullet.velocity);
-  bullet.velocity.multiplyScalar(0.5);
+  bullet.velocity.multiplyScalar(1);
   bullets.push(bullet);
   scene.add(bullet);
 });
 
-// -- Enemies
+// Enemies
 let enemies = [];
 function spawnEnemy() {
   let e = new THREE.Mesh(
     new THREE.BoxGeometry(1, 2, 1),
     new THREE.MeshStandardMaterial({ color: 0xff0000 })
   );
-  e.position.set(Math.random() * 100 - 25, 1, Math.random() * 100 - 50);
+  e.position.set(Math.random() * 50 - 25, 1, Math.random() * -50);
   e.health = 3;
   e.cooldown = 0;
   enemies.push(e);
@@ -127,7 +114,7 @@ function spawnEnemy() {
 }
 setInterval(spawnEnemy, 2000);
 
-// -- Explosions
+// Explosions
 function createExplosion(pos) {
   for (let i = 0; i < 10; i++) {
     let p = new THREE.Mesh(
@@ -141,7 +128,7 @@ function createExplosion(pos) {
   }
 }
 
-// -- Game Loop
+// Game Loop
 function animate() {
   requestAnimationFrame(animate);
 
@@ -175,7 +162,6 @@ function animate() {
     e.position.add(dir.multiplyScalar(0.02));
     e.position.add(strafe.multiplyScalar(Math.sin(Date.now() * 0.002) * 0.02));
 
-    // enemy shooting
     e.cooldown--;
     if (e.cooldown <= 0) {
       let bullet = new THREE.Mesh(
@@ -194,7 +180,6 @@ function animate() {
   enemyBullets.forEach((b, i) => {
     b.position.add(b.velocity);
     if (b.position.distanceTo(camera.position) < 1) {
-      initAudio();
       playHitSound();
       health -= 5;
       document.getElementById("healthFill").style.width = health + "%";
